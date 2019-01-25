@@ -12,8 +12,10 @@ Mappings:
       CIDR: 10.0.0.0/16
     Public:
       CIDR: 10.0.0.0/24
+      ZONE: 'us-east-2a'
     Private:
       CIDR: 10.0.1.0/24
+      ZONE: 'us-east-2b'
 
 Resources:
   VPC:
@@ -33,10 +35,10 @@ Resources:
       VpcId: !Ref VPC
       MapPublicIpOnLaunch: 'true'
       CidrBlock: !FindInMap [ SubnetConfig, Public, CIDR ]
-      AvailabilityZone: us-east-2b
+      AvailabilityZone: !FindInMap [ SubnetConfig, Public, ZONE ]
       Tags:
         - Key: Name
-          Value: MY_SUBNET_10.0.2.0/24_PUB_US_EAST_2B
+          Value: !Join [ '_', [ 'MY_SUBNET_PUB', !FindInMap [ SubnetConfig, Public, CIDR ], !FindInMap [ SubnetConfig, Public, ZONE ] ] ]
 
   InternetGateway:
     Type: AWS::EC2::InternetGateway
@@ -157,10 +159,10 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       CidrBlock: !FindInMap [ SubnetConfig, Private, CIDR ]
-      AvailabilityZone: us-east-2a
+      AvailabilityZone: !FindInMap [ SubnetConfig, Private, ZONE ]
       Tags:
         - Key: Name
-          Value: MY_SUBNET_10.0.1.0/24_PUB_US_EAST_2A
+          Value: !Join [ '_', [ 'MY_SUBNET_PRV', !FindInMap [ SubnetConfig, Private, CIDR ], !FindInMap [ SubnetConfig, Private, ZONE ] ] ]
 
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable
@@ -262,6 +264,9 @@ Resources:
         - DeviceName: /dev/xvda
           Ebs:
             VolumeSize: 8
+      Tags:
+        - Key: Name
+          Value: MY_BASTION_INSTANCE
 
   BastionSecurityGroup:
     Type: AWS::EC2::SecurityGroup
